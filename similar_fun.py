@@ -4,15 +4,7 @@ import pandas as pd
 import re
 
 
-def encode_features(col, values):
-    """
-    Encodes according to sorted values.
-    """
-    for i in range(len(values)):
-        if col == values[i]:
-            return i
-
-def price_class(value, borders):
+def price_class(value: float, borders: list):
     """Determine price class according to the prices.
         Parameters:
                     value: price must be defined in the price class
@@ -30,7 +22,7 @@ def price_class(value, borders):
                 return i
 
 
-def dummies_encoding(selected, selected_cols, weights):
+def dummies_encoding(selected: pd.DataFrame, selected_cols: pd.Index, weights: np.array):
     """Encodes the main features into dummies.
         Parameters:
                     selected: a dataframe with the main features
@@ -41,43 +33,12 @@ def dummies_encoding(selected, selected_cols, weights):
     features = pd.DataFrame({})
     for i in range(len(selected_cols)):
         coef = round(weights[i])
-        cat_cols = coef*pd.get_dummies(selected[selected_cols[i]])
+        cat_cols = coef * pd.get_dummies(selected[selected_cols[i]])
         features = pd.concat([features, cat_cols], axis=1)
     return features
 
 
-def euclidean_distance(x, y):
-    """Returns the distance matrix between objects with features in the matrix x and y.
-        Parameters:
-                    x: an array of numeric features of all products
-                    y: an array of numeric features of stock product.
-    """
-    sqr_x = np.array([np.sum(x * x, axis=1)])
-    sqr_y = np.array([np.sum(y * y, axis=1)])
-    x_y = np.dot(x,y.T)
-    dist_x_y = np.where(sqr_x.T - 2 * x_y + sqr_y >= 0, sqr_x.T - 2 * x_y + sqr_y, 0) ### in case of an error of the form -4e-15
-    return np.sqrt(dist_x_y)
-
-
-def k_nearest_neighbors(distances, k):
-    """Returns the first k indexes of nearest neighbors. 
-        Parameters:
-                    distances: the distance matrix of objects
-                    k: a number of nearest neighbors to be found.
-    """
-    if 2*k < distances.shape[1]:
-        k_sorted_index = np.argpartition(distances, k, axis = 1)
-        k_sorted_dist = np.take_along_axis(distances, k_sorted_index, axis = 1)
-        dist_k = np.delete(k_sorted_dist, np.s_[k:], axis=1)
-        index_k = np.delete(k_sorted_index, np.s_[k:], axis=1)
-        sorted_indexes = np.argsort(dist_k, axis=1)
-        dist_ind = np.take_along_axis(index_k, sorted_indexes, axis=1)
-    else:
-        dist_ind = np.argsort(distances, axis=1)[:, :k]
-    return dist_ind
-
-
-def search_for_neighbors(features):
+def search_for_neighbors(features: pd.DataFrame):
     """Looks for neighbors.
         Parameters:
                     features: a dataframe with the main encoded features 
@@ -93,7 +54,7 @@ def search_for_neighbors(features):
     return closest_ind
 
 
-def sorted_nearest_indexes(df, brand_col, indexes_array, apple=False):
+def sorted_nearest_indexes(df: pd.DataFrame, brand_col: str, indexes_array: np.array, apple=False):
     """Sortes neighbors by price and brand.
         Parameters:
                     df: dataframe to be sorted 
@@ -121,15 +82,7 @@ def sorted_nearest_indexes(df, brand_col, indexes_array, apple=False):
     return np.array(indexes)
 
 
-### Data preprocessing
-
-def code_median(data, cat_feature, real_feature):
-    "Encodes categorical feature by price."
-    
-    return (data[cat_feature].map(data.groupby(cat_feature)[real_feature].median()))
-
-
-def convert_to_float(val):
+def convert_to_float(val: str) -> float:
     """
     Returns a column that indicates whether the numeric value is valid.
     """
